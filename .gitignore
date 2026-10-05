@@ -1,8 +1,8 @@
-# Visual Studio Code Files
+# Editor
 .vscode/
+.idea/
 
-# config files
-sdkconfig*
+# Board config with Wi-Fi credentials
+firmware/config.py
 
-# partition file
-partitions.csv
+__pycache__/
