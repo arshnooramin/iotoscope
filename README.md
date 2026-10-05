@@ -35,21 +35,16 @@ The ESP32 serves the web app from its flash filesystem, then the browser opens a
 
 ```mermaid
 flowchart LR
-    subgraph browser["Web browser · client"]
-        direction TB
-        control["JavaScript<br/><b>control</b>"]
-        view["HTML/CSS<br/><b>view</b>"]
-    end
     subgraph board["ESP32-S2 · server"]
-        direction TB
-        fs[("Flash<br/>www/")]
-        server["Microdot<br/>web server"]
-        hw["GPIO + ADC"]
+        hw["GPIO + ADC"] <--> server["Microdot<br/>web server"]
+        fs[("Flash<br/>www/")] --> server
     end
-    fs --> server
+    subgraph browser["Web browser · client"]
+        view["HTML/CSS<br/><b>view</b>"]
+        control["JavaScript<br/><b>control</b>"]
+    end
     server -- "serves page (HTTP)" --> view
-    control <-->|"commands & readings<br/>(WebSocket /ws)"| server
-    server <--> hw
+    server <-->|"commands & readings<br/>(WebSocket /ws)"| control
 ```
 
 Network stack on the board:
