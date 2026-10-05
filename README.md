@@ -1,8 +1,8 @@
-# ioto · Internet of Things Oscilloscope
+# iotoscope
 
 A Wi-Fi oscilloscope and digital I/O tool built on the ESP32-S2. The board hosts its own web app: open it in any browser on the same network to scope signals and drive pins remotely.
 
-![ioto web app](docs/screenshot.png)
+<img width="1197" height="695" alt="Screenshot 2026-10-05 at 12 51 43 AM" src="https://github.com/user-attachments/assets/36d6d1dd-85e3-4f7f-9d0e-406e26624fc6" />
 
 ## Features
 
