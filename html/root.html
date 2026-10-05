@@ -1,196 +1,85 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 	<head>
 		<meta charset="UTF-8">
-		<!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-		<!--
-		<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
-		<meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'">
-		-->
-		<link rel="stylesheet" type="text/css" href="bulma.css" />
-		<link rel="stylesheet" type="text/css" href="main.css" />
-		<script src="https://cdn.plot.ly/plotly-2.11.1.min.js"></script>
-		<script src="https://kit.fontawesome.com/cc453edc36.js" crossorigin="anonymous"></script>
-		<title>IoT Oscilloscope | Analog and Digital</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="color-scheme" content="light dark">
+		<title>ioto · IoT Oscilloscope</title>
+		<link rel="icon" href="favicon.ico">
+		<link rel="stylesheet" href="main.css">
 	</head>
 	<body>
-		<div id="modal-js" class="modal">
-			<div class="modal-background"></div>
-			<div class="modal-card">
-			  <header class="modal-card-head">
-				<p id="modal-title" class="modal-card-title"></p>
-				<button onclick="closeModal()" class="delete" aria-label="close"></button>
-			  </header>
-			  <section class="modal-card-body">
-				<div class="columns">
-					<div class="column is-2"><p class="title is-5 has-text-justified has-text-centered">Mode:</p> </div>
-					<div class="column control">
-						<label class="radio">
-						  <input type="radio" name="mode">
-						  None
-						</label>
-						<label class="radio">
-						  <input type="radio" name="mode">
-						  Output
-						</label>
-						<label class="radio">
-							<input type="radio" name="mode">
-							Input
-						</label>
+		<header class="topbar">
+			<a class="brand" href="/">
+				<svg width="22" height="28" viewBox="0 0 68 88" aria-hidden="true">
+					<path fill="#00d1b2" d="M27 1C47-2 64 13 67 37c3 25-9 49-30 51C16 90 2 75 1 52-1 28 8 4 27 1Z"/>
+				</svg>
+				<span class="brand-name">ioto</span>
+				<span class="brand-tag">IoT Oscilloscope</span>
+			</a>
+			<span id="status" class="status" data-state="connecting" role="status">Connecting…</span>
+		</header>
+
+		<main>
+			<section class="card" aria-labelledby="analog-title">
+				<div class="card-head">
+					<div>
+						<h2 id="analog-title">Analog</h2>
+						<p class="sub">Channel 1 · GPIO7 · last 10 s</p>
+					</div>
+					<div class="actions">
+						<select id="rate" class="btn" aria-label="Sample rate">
+							<option value="2">2 Hz</option>
+							<option value="5">5 Hz</option>
+							<option value="10" selected>10 Hz</option>
+							<option value="20">20 Hz</option>
+						</select>
+						<button id="pause" class="btn" type="button" aria-pressed="false">
+							<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path id="pause-icon" d="M4 3h3v10H4zM9 3h3v10H9z"/></svg>
+							<span id="pause-label">Pause</span>
+						</button>
+						<button id="save" class="btn" type="button" title="Save chart as PNG">
+							<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M3 13h10"/></svg>
+							Save
+						</button>
 					</div>
 				</div>
-				<div class="columns">
-					<div class="column is-2"><p class="title is-5 has-text-justified has-text-centered">Level:</p> </div>
-					<div class="column control">
-						<label class="radio">
-							<input type="radio" name="level" value="None">
-							None
-						</label>
-						<label class="radio">
-						  <input type="radio" name="level" value="HIGH">
-						  High
-						</label>
-						<label class="radio">
-						  <input type="radio" name="level" value="LOW">
-						  Low
-						</label>
-					  </div>
-				</div>
-			  </section>
-			  <footer class="modal-card-foot">
-				<button onclick="update()" class="button is-success">Update</button>
-				<button onclick="closeModal()" class="button">Cancel</button>
-			  </footer>
-			</div>
-		</div>
-		<nav class="navbar my-2" role="navigation" aria-label="main navigation">
-			<div class="navbar-brand">
-			  <a class="navbar-item ml-5" href="">
-				<img src="https://user-images.githubusercontent.com/38775985/165428469-39432012-e095-4652-9d48-8b754937c9c5.png" alt="" height="200">
-			  </a>
-			</div>
-			<div class="navbar-end mr-5">
-				<div class="navbar-item">
-					<div class="tags has-addons">
-					  <span class="tag">Status</span>
-					  <span id="status" class="tag is-danger">Disconnected</span>
+				<div class="readout">
+					<div class="reading"><span id="reading">–.–––</span><small>V</small></div>
+					<div class="stats">
+						<span>min <b id="min">–</b></span>
+						<span>max <b id="max">–</b></span>
 					</div>
 				</div>
-			</div>
-			
-		</nav>
-		<div class="container mt-5">
-			<div class="tile is-ancestor">
-				<!-- <div class="tile is-2 is-vertical is-parent">
-				  <div class="tile is-child notification is-primary">
-					<p class="title">Status</p>
-					<p id="status"><button class="button is-small is-primary is-loading"></button>Connecting</p>
-				  </div>
-				  <div class="tile is-child notification is-danger">
-					<p class="title">Errors</p>
-					<p>No Errors!</p>
-				  </div>
-				</div> -->
-				<div class="tile is-horizontal is-parent">
-					<div class="tile has-background-info is-child panel is-info">
-						<p class="panel-heading">Digital</p>
-						<div class="notification has-background-dark">
-							<div id="pins1" class="block columns">
-								<div id="3V3_pin" class="column">
-									<span id="3V3_span" class="mb-1 is-rounded is-success is-flex tag">HIGH</span>
-									<button onclick="openModal()" id="GND" class="button is-black is-fullwidth" disabled>3V3</button>
-								</div>
-								<div id="GND_pin" class="column">
-									<span id="GND_span" class="mb-1 is-rounded is-danger is-flex tag">LOW</span>
-									<button onclick="openModal()" id="GND" class="button is-black is-fullwidth" disabled>GND</button>
-								</div>
-								<div id="GPIO42_pin" class="column">
-									<span id="GPIO42_span" class="mb-1 is-rounded is-black is-flex tag">None</span>
-									<button onclick="openModal()" id="GPIO42" class="button is-black is-fullwidth">D1</button>
-								</div>
-								<div id="GPIO41_pin" class="column">
-									<span id="GPIO41_span" class="mb-1 is-rounded is-black is-flex tag">None</span>
-									<button onclick="openModal()" id="GPIO41" class="button is-black is-fullwidth">D2</button>
-								</div>
-								<div id="GPIO40_pin" class="column">
-									<span id="GPIO40_span" class="mb-1 is-rounded is-black is-flex tag">None</span>
-									<button onclick="openModal()" id="GPIO40" class="button is-black is-fullwidth">D3</button>
-								</div>
-							</div>
-							<div class="block tile has-text-white py-6 has-background-dark notification is-light">
-							</div>
-							<div class="block tile has-text-white py-1 has-background-dark notification is-light"></div>
-							<div id="pins2" class="block columns">
-								<div id="3V3_pin" class="column">
-									<button onclick="openModal()" id="3V3" class="button is-black is-fullwidth" disabled>3V3</button>
-									<span id="3V3_span" class="mt-1 is-rounded is-success is-flex tag">HIGH</span>
-								</div>
-								<div id="3V3_pin" class="column">
-									<button onclick="openModal()" id="3V3" class="button is-black is-fullwidth" disabled>GND</button>
-									<span id="3V3_span" class="mt-1 is-rounded is-danger is-flex tag">LOW</span>
-								</div>
-								<div id="GPIO39_pin" class="column">
-									<button onclick="openModal()" id="GPIO39" class="button is-black is-fullwidth">D4</button>
-									<span id="GPIO39_span" class="mt-1 is-rounded is-black is-flex tag">None</span>
-								</div>
-								<div id="GPIO38_pin" class="column">
-									<button onclick="openModal()" id="GPIO38" class="button is-black is-fullwidth">D5</button>
-									<span id="GPIO38_span" class="mt-1 is-rounded is-black is-flex tag">None</span>
-								</div>
-								<div id="GPIO37_pin" class="column">
-									<button onclick="openModal()" id="GPIO37" class="button is-black is-fullwidth">D6</button>
-									<span id="GPIO37_span" class="mt-1 is-rounded is-black is-flex tag">None</span>
-								</div>
-							</div>
-						</div>
+				<canvas id="scope" class="scope" role="img" aria-label="Channel 1 voltage over the last 10 seconds"></canvas>
+			</section>
+
+			<section class="card" aria-labelledby="digital-title">
+				<div class="card-head">
+					<div>
+						<h2 id="digital-title">Digital</h2>
+						<p class="sub">Set each pin to off, input, or output</p>
 					</div>
 				</div>
-				<div class="tile is-horizontal is-parent">
-					<div class="tile has-background-dark is-child panel is-primary">
-						<div class="panel-heading">
-							<div class="columns mr-2">
-								<p class="column">Analog</p>
-								<div class="column is-1">
-									<button class="button is-small is-primary">
-										<span class="icon is-small">
-										  <i class="fas fa-play"></i>
-										</span>
-									</button>
-								</div>
-								<div class="column is-1">
-									<button class="button is-small is-primary">
-										<span class="icon is-small">
-										  <i class="fas fa-sliders-h"></i>
-										</span>
-									</button>
-								</div>
-							</div>
-							
-						</div>
-						<div class="has-background-dark is-small mt-3 mx-2 tabs is-boxed">
-							<ul>
-							  <li class="is-active">
-								<a>
-								  <span class="has-text-white">Channel 1</span>
-								</a>
-							  </li>
-							  <li>
-								<a>
-								  <span class="has-text-white">Channel 2</span>
-								</a>
-							  </li>
-							</ul>
-						  </div>
-						<div class="panel-block has-background-dark my-2" id="tester" style="width:100%;height:250px;"></div>
-					</div>
+				<div id="pins" class="pins"></div>
+			</section>
+		</main>
+
+		<template id="pin-template">
+			<div class="pin">
+				<div class="pin-head">
+					<span class="pin-name"></span>
+					<span class="pin-gpio"></span>
 				</div>
+				<div class="segmented" role="radiogroup">
+					<label><input type="radio" value="off"><span>Off</span></label>
+					<label><input type="radio" value="input"><span>In</span></label>
+					<label><input type="radio" value="output"><span>Out</span></label>
+				</div>
+				<button class="level" type="button"></button>
 			</div>
-		</div>
-		<footer class="footer has-background-white mt-4">
-			<div class="content has-text-centered is-size-6">
-			  <p><strong>Internet of Things Oscilloscope</strong> developed by <a href="https://arshnooramin.github.io/">Arsh Noor Amin</a>.</p>
-			</div>
-		  </footer>
-		<script type="text/javascript" src="main.js"></script>
+		</template>
+
+		<script src="main.js"></script>
 	</body>
 </html>
